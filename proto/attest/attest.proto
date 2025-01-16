@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package attest;
+option go_package = "github.com/radiusxyz/lightbulb-tdx/proto/attest";
+
+
+service AttestService {
+  rpc Attest (AttestRequest) returns (AttestReply);
+}
+
+message AttestRequest {
+  bytes report_data = 1;
+}
+
+message AttestReply {
+  string quote = 1;
+}

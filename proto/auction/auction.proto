@@ -1,0 +1,120 @@
+syntax = "proto3";
+
+package auction;
+
+option go_package = "github.com/radiusxyz/lightbulb-tdx/proto/auction";
+
+// AuctionService defines the RPC methods for auction operations.
+service AuctionService {
+  // Starts a new auction.
+  rpc StartAuction(StartAuctionRequest) returns (StartAuctionResponse);
+
+  // Submits a bid for an auction.
+  rpc SubmitBid(SubmitBidRequest) returns (SubmitBidResponse);
+
+  // Submits a batch of bids for an auction.
+  rpc SubmitBidBatch(SubmitBidBatchRequest) returns (SubmitBidBatchResponse);
+
+  // Requests sale information for an auction.
+  rpc RequestSaleInfo(RequestSaleInfoRequest) returns (RequestSaleInfoResponse);
+
+  // Retrieves the latest transactions of bids (TOB).
+  rpc GetLatestTob(GetLatestTobRequest) returns (GetLatestTobResponse);
+
+  // Retrieves the current state of an auction.
+  rpc GetAuctionState(GetAuctionStateRequest) returns (GetAuctionStateResponse);
+}
+
+// Request to start a new auction.
+message StartAuctionRequest {
+  string auction_id = 1;  // The unique identifier of the auction.
+  AuctionInfo info = 2;   // The details of the auction to start.
+}
+
+// Response for starting an auction.
+message StartAuctionResponse {
+  bool success = 1;     // Whether the auction was successfully started.
+  string message = 2;   // Additional information about the operation.
+}
+
+// Request to submit a bid for an auction.
+message SubmitBidRequest {
+  string auction_id = 1;  // The unique identifier of the auction.
+  Bid bid = 2;            // The bid details to submit.
+}
+
+// Response for submitting a bid.
+message SubmitBidResponse {
+  bool success = 1;     // Whether the bid was successfully submitted.
+  string message = 2;   // Additional information about the operation.
+}
+
+// Request to submit multiple bids for an auction.
+message SubmitBidBatchRequest {
+  string auction_id = 1;  // The unique identifier of the auction.
+  repeated Bid bids = 2;  // The list of bids to submit.
+}
+
+// Response for submitting multiple bids.
+message SubmitBidBatchResponse {
+  bool success = 1;     // Whether the bids were successfully submitted.
+  string message = 2;   // Additional information about the operation.
+}
+
+// Request for sale information.
+message RequestSaleInfoRequest {}
+
+// Response containing sale information.
+message RequestSaleInfoResponse {
+  string auction_id = 1;  // The unique identifier of the auction.
+  AuctionInfo info = 2;   // The details of the auction.
+}
+
+// Request for the latest transactions of bids (TOB).
+message GetLatestTobRequest {}
+
+// Response containing the latest transactions of bids.
+message GetLatestTobResponse {
+  repeated Tx tx_list = 1;  // The list of transactions.
+}
+
+// Request for the current state of an auction.
+message GetAuctionStateRequest {}
+
+// Response containing the current state of an auction.
+message GetAuctionStateResponse {
+  AuctionState state = 1;   // The current state of the auction.
+}
+
+// Represents the details of an auction.
+message AuctionInfo {
+  string id = 1;                // The unique identifier of the auction.
+  int64 start_time = 2;         // The start time of the auction (Unix timestamp in milliseconds).
+  int64 end_time = 3;           // The end time of the auction (Unix timestamp in milliseconds).
+  string seller_address = 4;    // The address of the seller.
+  int64 block_number = 5;       // The block number where the auction is registered.
+  int64 blockspace_size = 6;    // The block space size being auctioned.
+  string seller_signature = 7;  // The seller's signature for the auction.
+}
+
+// Represents a bid submitted by a buyer.
+message Bid {
+  string bidder_addr = 1;       // The address of the bidder.
+  int64 bid_amount = 2;         // The amount of the bid.
+  string bidder_signature = 3;  // The signature of the bidder.
+  repeated Tx tx_list = 4;      // The list of transactions associated with the bid.
+}
+
+// Represents a transaction submitted by a bidder.
+message Tx {
+  string tx_data = 1;   // The raw transaction data.
+}
+
+// Represents the state of an auction.
+message AuctionState {
+  AuctionInfo auction_info = 1;   // The details of the auction.
+  repeated Bid bids = 2;          // The list of all bids submitted.
+  bool is_ended = 3;              // Whether the auction has ended.
+  int64 highest_bid = 4;          // The current highest bid amount.
+  string winner = 5;              // The address of the winning bidder, if available.
+}
