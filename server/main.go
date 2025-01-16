@@ -12,8 +12,8 @@ import (
 	tdxClient "github.com/google/go-tdx-guest/client"
 	tdxProto "github.com/google/go-tdx-guest/proto/tdx"
 
-	attestpb "github.com/radiusxyz/lightbulb-tdx/proto/attest"
-	auctionpb "github.com/radiusxyz/lightbulb-tdx/proto/auction"
+	attestpb "github.com/radiusxyz/lightbulb-proto/proto/attest"
+	auctionpb "github.com/radiusxyz/lightbulb-proto/proto/auction"
 )
 
 type server struct {
