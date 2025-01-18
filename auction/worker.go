@@ -18,22 +18,24 @@ const (
 
 // AuctionWorker manages auctions in a queue, ensuring they are processed by start time.
 type AuctionWorker struct {
-	chainID      int64                     // Unique identifier for the worker.
-	state        *AuctionState             // Holds the current state of the auction being processed.
-	mu           sync.RWMutex              // RWMutex for protecting shared resources.
-	queueCond    *sync.Cond                // Condition variable to handle empty queue waiting.
-	auctionQueue []AuctionInfo             // Queue of auctions sorted by StartTime.
-	interruptCh  chan struct{}   		   // Channel to interrupt waiting when queue changes.
-	tdxClient    attest.TDXClientInterface // TDX client for quote generation.
+	chainID      int64                       // Unique identifier for the worker.
+	state        *AuctionState               // Holds the current state of the auction being processed.
+	mu           sync.RWMutex                // RWMutex for protecting shared resources.
+	queueCond    *sync.Cond                  // Condition variable to handle empty queue waiting.
+	auctionQueue []AuctionInfo               // Queue of auctions sorted by StartTime.
+	interruptCh  chan struct{}   		     // Channel to interrupt waiting when queue changes.
+	tdxClient    attest.TDXClientInterface   // TDX client for quote generation.
+	rtmrExtender *attest.IMAEventLogExtender // Extender for RTMR values
 }
 
 // NewAuctionWorker initializes a new AuctionWorker and starts its queue processor.
-func NewAuctionWorker(chainID int64) *AuctionWorker {
+func NewAuctionWorker(chainID int64, rtmrExtender *attest.IMAEventLogExtender) *AuctionWorker {
 	worker := &AuctionWorker{
 		chainID:     chainID,
 		state:       &AuctionState{},
 		interruptCh: make(chan struct{}, 1), // Buffered channel to avoid blocking.
 		tdxClient:   attest.NewTDXClientWrapper(),
+		rtmrExtender: rtmrExtender,
 	}
 	worker.queueCond = sync.NewCond(&worker.mu)
 
@@ -231,6 +233,10 @@ func (w *AuctionWorker) runAuction(ctx context.Context, info AuctionInfo) {
 	select {
 	case <-done:
 		log.Printf("[Worker %d] Auction (ID: %s) completed.\n", w.chainID, info.AuctionID)
+
+		// Extend the event log to the RTMR[3].
+		// In a real scenario, this should be extended automatically to RTMR[2] by kernel.
+		err := w.rtmrExtender.ExtendLogs(3)
 
 		// Call GetQuote after the auction is completed.
 		quote, err := attest.GetQuote([]byte("report_data"), w.tdxClient)

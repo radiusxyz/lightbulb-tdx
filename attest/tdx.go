@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/google/go-tdx-guest/client"
+
 	tdxpb "github.com/google/go-tdx-guest/proto/tdx"
 	attestpb "github.com/radiusxyz/lightbulb-tdx/proto/attest"
 )

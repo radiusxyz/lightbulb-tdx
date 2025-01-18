@@ -6,20 +6,23 @@ import (
 	"log"
 	"sync"
 
+	"github.com/radiusxyz/lightbulb-tdx/attest"
 	auctionpb "github.com/radiusxyz/lightbulb-tdx/proto/auction"
 )
 
 type Server struct {
 	auctionpb.UnimplementedAuctionServiceServer
 
-	workers map[int64]*AuctionWorker // Workers mapped by chain ID
-	mu      sync.RWMutex             // Mutex to ensure thread-safe access to the workers map.
+	workers map[int64]*AuctionWorker         // Workers mapped by chain ID
+	rtmrExtender *attest.IMAEventLogExtender // Extender for RTMR values
+	mu      sync.RWMutex                     // Mutex to ensure thread-safe access to the workers map.
 }
 
 // NewServer initializes a new gRPC server instance.
 func NewServer() *Server {
 	return &Server{
 		workers: make(map[int64]*AuctionWorker),
+		rtmrExtender: attest.DefaultIMAEventLogExtender(),
 	}
 }
 
@@ -34,7 +37,7 @@ func (s *Server) AddAuction(ctx context.Context, req *auctionpb.AddAuctionReques
 	// Retrieve or create the worker for the chain
 	worker, exists := s.workers[info.ChainID]
 	if !exists {
-		worker = NewAuctionWorker(info.ChainID)
+		worker = NewAuctionWorker(info.ChainID, s.rtmrExtender)
 		s.workers[info.ChainID] = worker
 	}
 
