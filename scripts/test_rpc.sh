@@ -166,6 +166,27 @@ EOF
     grpcurl -plaintext -d "$JSON_PAYLOAD" $GRPC_URL auction.AuctionService/GetLatestTob
 }
 
+get_quote() {
+    # Report data in base64 (or hex) format
+    REPORT_DATA=${1:-"testreportdata"}
+
+    # gRPC request payload
+    JSON_PAYLOAD=$(
+        cat <<EOF
+{
+  "report_data": "$REPORT_DATA"
+}
+EOF
+    )
+
+    # Print payload for debugging
+    echo "Sending gRPC request to GetQuote with payload:"
+    echo "$JSON_PAYLOAD"
+
+    # Execute gRPC call
+    grpcurl -plaintext -d "$JSON_PAYLOAD" $GRPC_URL attest.AttestService/GetQuote
+}
+
 # Main script logic
 case $1 in
 add_auction)
@@ -183,8 +204,11 @@ get_auction_state)
 get_latest_tob)
     get_latest_tob
     ;;
+get_quote)
+    get_quote "$2"
+    ;;
 *)
-    echo "Usage: $0 {add_auction|submit_bids|get_auction_info|get_auction_state|get_latest_tob} [arguments]"
+    echo "Usage: $0 {add_auction|submit_bids|get_auction_info|get_auction_state|get_latest_tob|get_quote} [arguments]"
     exit 1
     ;;
 esac
