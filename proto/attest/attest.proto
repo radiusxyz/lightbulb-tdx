@@ -1,17 +1,19 @@
 syntax = "proto3";
 
 package attest;
+
 option go_package = "github.com/radiusxyz/lightbulb-proto/proto/attest";
 
+import "proto/tdx/quote.proto";
 
 service AttestService {
-  rpc Attest (AttestRequest) returns (AttestReply);
+  rpc GenerateQuote (GetQuoteRequest) returns (GetQuoteResponse);
 }
 
-message AttestRequest {
+message GetQuoteRequest {
   bytes report_data = 1;
 }
 
-message AttestReply {
-  string quote = 1;
+message GetQuoteResponse {
+  tdx.QuoteV4 quote = 1;
 }

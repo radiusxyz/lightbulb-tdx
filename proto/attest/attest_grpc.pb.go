@@ -19,14 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AttestService_Attest_FullMethodName = "/attest.AttestService/Attest"
+	AttestService_GenerateQuote_FullMethodName = "/attest.AttestService/GenerateQuote"
 )
 
 // AttestServiceClient is the client API for AttestService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AttestServiceClient interface {
-	Attest(ctx context.Context, in *AttestRequest, opts ...grpc.CallOption) (*AttestReply, error)
+	GenerateQuote(ctx context.Context, in *GetQuoteRequest, opts ...grpc.CallOption) (*GetQuoteResponse, error)
 }
 
 type attestServiceClient struct {
@@ -37,10 +37,10 @@ func NewAttestServiceClient(cc grpc.ClientConnInterface) AttestServiceClient {
 	return &attestServiceClient{cc}
 }
 
-func (c *attestServiceClient) Attest(ctx context.Context, in *AttestRequest, opts ...grpc.CallOption) (*AttestReply, error) {
+func (c *attestServiceClient) GenerateQuote(ctx context.Context, in *GetQuoteRequest, opts ...grpc.CallOption) (*GetQuoteResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(AttestReply)
-	err := c.cc.Invoke(ctx, AttestService_Attest_FullMethodName, in, out, cOpts...)
+	out := new(GetQuoteResponse)
+	err := c.cc.Invoke(ctx, AttestService_GenerateQuote_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (c *attestServiceClient) Attest(ctx context.Context, in *AttestRequest, opt
 // All implementations must embed UnimplementedAttestServiceServer
 // for forward compatibility.
 type AttestServiceServer interface {
-	Attest(context.Context, *AttestRequest) (*AttestReply, error)
+	GenerateQuote(context.Context, *GetQuoteRequest) (*GetQuoteResponse, error)
 	mustEmbedUnimplementedAttestServiceServer()
 }
 
@@ -62,8 +62,8 @@ type AttestServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAttestServiceServer struct{}
 
-func (UnimplementedAttestServiceServer) Attest(context.Context, *AttestRequest) (*AttestReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Attest not implemented")
+func (UnimplementedAttestServiceServer) GenerateQuote(context.Context, *GetQuoteRequest) (*GetQuoteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GenerateQuote not implemented")
 }
 func (UnimplementedAttestServiceServer) mustEmbedUnimplementedAttestServiceServer() {}
 func (UnimplementedAttestServiceServer) testEmbeddedByValue()                       {}
@@ -86,20 +86,20 @@ func RegisterAttestServiceServer(s grpc.ServiceRegistrar, srv AttestServiceServe
 	s.RegisterService(&AttestService_ServiceDesc, srv)
 }
 
-func _AttestService_Attest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AttestRequest)
+func _AttestService_GenerateQuote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetQuoteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AttestServiceServer).Attest(ctx, in)
+		return srv.(AttestServiceServer).GenerateQuote(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AttestService_Attest_FullMethodName,
+		FullMethod: AttestService_GenerateQuote_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AttestServiceServer).Attest(ctx, req.(*AttestRequest))
+		return srv.(AttestServiceServer).GenerateQuote(ctx, req.(*GetQuoteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -112,8 +112,8 @@ var AttestService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*AttestServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Attest",
-			Handler:    _AttestService_Attest_Handler,
+			MethodName: "GenerateQuote",
+			Handler:    _AttestService_GenerateQuote_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

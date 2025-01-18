@@ -7,7 +7,7 @@ option go_package = "github.com/radiusxyz/lightbulb-tdx/proto/auction";
 // AuctionService defines the RPC methods for auction operations.
 service AuctionService {
   // Initiates a new auction.
-  rpc StartAuction(StartAuctionRequest) returns (StartAuctionResponse);
+  rpc AddAuction(AddAuctionRequest) returns (AddAuctionResponse);
 
   // Submits multiple bids for a specific auction.
   rpc SubmitBids(SubmitBidsRequest) returns (SubmitBidsResponse);
@@ -23,12 +23,12 @@ service AuctionService {
 }
 
 // Request to start a new auction.
-message StartAuctionRequest {
+message AddAuctionRequest {
   AuctionInfo auction_info = 1;   // The details of the auction to start.
 }
 
 // Response for starting an auction.
-message StartAuctionResponse {
+message AddAuctionResponse {
   bool success = 1;   // Whether the auction was successfully started.
   string message = 2; // Additional information about the operation.
 }

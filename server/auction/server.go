@@ -3,6 +3,7 @@ package auction
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 
 	auctionpb "github.com/radiusxyz/lightbulb-tdx/proto/auction"
@@ -22,8 +23,8 @@ func NewServer() *Server {
 	}
 }
 
-// StartAuction handles the gRPC call to start an auction.
-func (s *Server) StartAuction(ctx context.Context, req *auctionpb.StartAuctionRequest) (*auctionpb.StartAuctionResponse, error) {
+// AddAuction handles the gRPC call to start an auction.
+func (s *Server) AddAuction(ctx context.Context, req *auctionpb.AddAuctionRequest) (*auctionpb.AddAuctionResponse, error) {
 	pbInfo := req.GetAuctionInfo()
 	info := ConvertProtobufAuctionInfoToDomain(pbInfo)
 
@@ -37,16 +38,21 @@ func (s *Server) StartAuction(ctx context.Context, req *auctionpb.StartAuctionRe
 		s.workers[info.ChainID] = worker
 	}
 
+	// Debug: Print the worker map
+	for chainID, worker := range s.workers {
+		log.Printf("Worker %d: %v\n", chainID, worker)
+	}
+
 	// Start the auction
-	err := worker.StartAuction(info)
+	err := worker.AddAuction(info)
 	if err != nil {
-		return &auctionpb.StartAuctionResponse{
+		return &auctionpb.AddAuctionResponse{
 			Success: false,
 			Message: err.Error(),
 		}, nil
 	}
 
-	return &auctionpb.StartAuctionResponse{
+	return &auctionpb.AddAuctionResponse{
 		Success: true,
 		Message: "Auction started successfully",
 	}, nil
@@ -88,7 +94,6 @@ func (s *Server) SubmitBids(ctx context.Context, req *auctionpb.SubmitBidsReques
 // GetAuctionInfo retrieves detailed information about a specific auction.
 func (s *Server) GetAuctionInfo(ctx context.Context, req *auctionpb.GetAuctionInfoRequest) (*auctionpb.GetAuctionInfoResponse, error) {
 	chainID := req.GetChainId()
-	auctionID := req.GetAuctionId()
 
 	s.mu.RLock()
 	worker, exists := s.workers[chainID]
@@ -98,10 +103,7 @@ func (s *Server) GetAuctionInfo(ctx context.Context, req *auctionpb.GetAuctionIn
 		return nil, fmt.Errorf("chain not found")
 	}
 
-	info, err := worker.GetAuctionInfo()
-	if err != nil || info.AuctionID != auctionID {
-		return nil, fmt.Errorf("auction not found")
-	}
+	info := worker.GetAuctionInfo()
 
 	return &auctionpb.GetAuctionInfoResponse{
 		AuctionInfo: ConvertDomainAuctionInfoToProtobuf(info),
@@ -142,10 +144,7 @@ func (s *Server) GetAuctionState(ctx context.Context, req *auctionpb.GetAuctionS
 		return nil, fmt.Errorf("chain not found")
 	}
 
-	state, err := worker.GetAuctionState()
-	if err != nil {
-		return nil, err
-	}
+	state := worker.GetAuctionState()
 
 	return &auctionpb.GetAuctionStateResponse{
 		State: ConvertDomainAuctionStateToProtobuf(state),

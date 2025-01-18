@@ -19,7 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AuctionService_StartAuction_FullMethodName    = "/auction.AuctionService/StartAuction"
+	AuctionService_AddAuction_FullMethodName      = "/auction.AuctionService/AddAuction"
 	AuctionService_SubmitBids_FullMethodName      = "/auction.AuctionService/SubmitBids"
 	AuctionService_GetAuctionInfo_FullMethodName  = "/auction.AuctionService/GetAuctionInfo"
 	AuctionService_GetLatestTob_FullMethodName    = "/auction.AuctionService/GetLatestTob"
@@ -33,7 +33,7 @@ const (
 // AuctionService defines the RPC methods for auction operations.
 type AuctionServiceClient interface {
 	// Initiates a new auction.
-	StartAuction(ctx context.Context, in *StartAuctionRequest, opts ...grpc.CallOption) (*StartAuctionResponse, error)
+	AddAuction(ctx context.Context, in *AddAuctionRequest, opts ...grpc.CallOption) (*AddAuctionResponse, error)
 	// Submits multiple bids for a specific auction.
 	SubmitBids(ctx context.Context, in *SubmitBidsRequest, opts ...grpc.CallOption) (*SubmitBidsResponse, error)
 	// Retrieves detailed information about a specific auction.
@@ -52,10 +52,10 @@ func NewAuctionServiceClient(cc grpc.ClientConnInterface) AuctionServiceClient {
 	return &auctionServiceClient{cc}
 }
 
-func (c *auctionServiceClient) StartAuction(ctx context.Context, in *StartAuctionRequest, opts ...grpc.CallOption) (*StartAuctionResponse, error) {
+func (c *auctionServiceClient) AddAuction(ctx context.Context, in *AddAuctionRequest, opts ...grpc.CallOption) (*AddAuctionResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(StartAuctionResponse)
-	err := c.cc.Invoke(ctx, AuctionService_StartAuction_FullMethodName, in, out, cOpts...)
+	out := new(AddAuctionResponse)
+	err := c.cc.Invoke(ctx, AuctionService_AddAuction_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (c *auctionServiceClient) GetAuctionState(ctx context.Context, in *GetAucti
 // AuctionService defines the RPC methods for auction operations.
 type AuctionServiceServer interface {
 	// Initiates a new auction.
-	StartAuction(context.Context, *StartAuctionRequest) (*StartAuctionResponse, error)
+	AddAuction(context.Context, *AddAuctionRequest) (*AddAuctionResponse, error)
 	// Submits multiple bids for a specific auction.
 	SubmitBids(context.Context, *SubmitBidsRequest) (*SubmitBidsResponse, error)
 	// Retrieves detailed information about a specific auction.
@@ -128,8 +128,8 @@ type AuctionServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAuctionServiceServer struct{}
 
-func (UnimplementedAuctionServiceServer) StartAuction(context.Context, *StartAuctionRequest) (*StartAuctionResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method StartAuction not implemented")
+func (UnimplementedAuctionServiceServer) AddAuction(context.Context, *AddAuctionRequest) (*AddAuctionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddAuction not implemented")
 }
 func (UnimplementedAuctionServiceServer) SubmitBids(context.Context, *SubmitBidsRequest) (*SubmitBidsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SubmitBids not implemented")
@@ -164,20 +164,20 @@ func RegisterAuctionServiceServer(s grpc.ServiceRegistrar, srv AuctionServiceSer
 	s.RegisterService(&AuctionService_ServiceDesc, srv)
 }
 
-func _AuctionService_StartAuction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StartAuctionRequest)
+func _AuctionService_AddAuction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddAuctionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AuctionServiceServer).StartAuction(ctx, in)
+		return srv.(AuctionServiceServer).AddAuction(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AuctionService_StartAuction_FullMethodName,
+		FullMethod: AuctionService_AddAuction_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuctionServiceServer).StartAuction(ctx, req.(*StartAuctionRequest))
+		return srv.(AuctionServiceServer).AddAuction(ctx, req.(*AddAuctionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -262,8 +262,8 @@ var AuctionService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*AuctionServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "StartAuction",
-			Handler:    _AuctionService_StartAuction_Handler,
+			MethodName: "AddAuction",
+			Handler:    _AuctionService_AddAuction_Handler,
 		},
 		{
 			MethodName: "SubmitBids",
