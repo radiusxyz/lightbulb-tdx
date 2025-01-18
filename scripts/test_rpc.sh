@@ -5,25 +5,25 @@ GRPC_URL="localhost:50051"
 
 # Functions for each RPC method
 add_auction() {
-    # Current timestamp in seconds
-    NOW=$(date +%s)
+  # Current timestamp in seconds
+  NOW=$(date +%s)
 
-    # Start time: now + 5 seconds
-    START=$(($NOW + 5))
+  # Start time: now + 5 seconds
+  START=$(($NOW + 5))
 
-    # End time: start + 15 seconds
-    END=$(($START + 15))
+  # End time: start + 15 seconds
+  END=$(($START + 15))
 
-    # Convert timestamps to milliseconds
-    START_MS=$(($START * 1000))
-    END_MS=$(($END * 1000))
+  # Convert timestamps to milliseconds
+  START_MS=$(($START * 1000))
+  END_MS=$(($END * 1000))
 
-    # Auction ID (can be passed as an argument or hardcoded)
-    AUCTION_ID=${1:-"auction123"}
+  # Auction ID (can be passed as an argument or hardcoded)
+  AUCTION_ID=${1:-"auction123"}
 
-    # gRPC request payload
-    JSON_PAYLOAD=$(
-        cat <<EOF
+  # gRPC request payload
+  JSON_PAYLOAD=$(
+    cat <<EOF
 {
   "auction_info": {
     "auction_id": "$AUCTION_ID",
@@ -37,23 +37,23 @@ add_auction() {
   }
 }
 EOF
-    )
+  )
 
-    # Print payload for debugging
-    echo "Sending gRPC request to AddAuction with payload:"
-    echo "$JSON_PAYLOAD"
+  # Print payload for debugging
+  echo "Sending gRPC request to AddAuction with payload:"
+  echo "$JSON_PAYLOAD"
 
-    # Execute gRPC call
-    grpcurl -plaintext -d "$JSON_PAYLOAD" $GRPC_URL auction.AuctionService/AddAuction
+  # Execute gRPC call
+  grpcurl -plaintext -d "$JSON_PAYLOAD" $GRPC_URL auction.AuctionService/AddAuction
 }
 
 submit_bids() {
-    CHAIN_ID=1
-    AUCTION_ID="auction123"
+  CHAIN_ID=1
+  AUCTION_ID="auction123"
 
-    # gRPC request payload
-    JSON_PAYLOAD=$(
-        cat <<EOF
+  # gRPC request payload
+  JSON_PAYLOAD=$(
+    cat <<EOF
 {
   "chain_id": $CHAIN_ID,
   "auction_id": "$AUCTION_ID",
@@ -94,121 +94,121 @@ submit_bids() {
   ]
 }
 EOF
-    )
+  )
 
-    # Print payload for debugging
-    echo "Sending gRPC request to SubmitBids with payload:"
-    echo "$JSON_PAYLOAD"
+  # Print payload for debugging
+  echo "Sending gRPC request to SubmitBids with payload:"
+  echo "$JSON_PAYLOAD"
 
-    # Execute gRPC call
-    grpcurl -plaintext -d "$JSON_PAYLOAD" $GRPC_URL auction.AuctionService/SubmitBids
+  # Execute gRPC call
+  grpcurl -plaintext -d "$JSON_PAYLOAD" $GRPC_URL auction.AuctionService/SubmitBids
 }
 
 get_auction_info() {
-    CHAIN_ID=1
-    AUCTION_ID="auction123"
+  CHAIN_ID=1
+  AUCTION_ID="auction123"
 
-    # gRPC request payload
-    JSON_PAYLOAD=$(
-        cat <<EOF
+  # gRPC request payload
+  JSON_PAYLOAD=$(
+    cat <<EOF
 {
   "chain_id": $CHAIN_ID,
   "auction_id": "$AUCTION_ID"
 }
 EOF
-    )
+  )
 
-    # Print payload for debugging
-    echo "Sending gRPC request to GetAuctionInfo with payload:"
-    echo "$JSON_PAYLOAD"
+  # Print payload for debugging
+  echo "Sending gRPC request to GetAuctionInfo with payload:"
+  echo "$JSON_PAYLOAD"
 
-    # Execute gRPC call
-    grpcurl -plaintext -d "$JSON_PAYLOAD" $GRPC_URL auction.AuctionService/GetAuctionInfo
+  # Execute gRPC call
+  grpcurl -plaintext -d "$JSON_PAYLOAD" $GRPC_URL auction.AuctionService/GetAuctionInfo
 }
 
 get_auction_state() {
-    CHAIN_ID=1
+  CHAIN_ID=1
 
-    # gRPC request payload
-    JSON_PAYLOAD=$(
-        cat <<EOF
+  # gRPC request payload
+  JSON_PAYLOAD=$(
+    cat <<EOF
 {
   "chain_id": $CHAIN_ID
 }
 EOF
-    )
+  )
 
-    # Print payload for debugging
-    echo "Sending gRPC request to GetAuctionState with payload:"
-    echo "$JSON_PAYLOAD"
+  # Print payload for debugging
+  echo "Sending gRPC request to GetAuctionState with payload:"
+  echo "$JSON_PAYLOAD"
 
-    # Execute gRPC call
-    grpcurl -plaintext -d "$JSON_PAYLOAD" $GRPC_URL auction.AuctionService/GetAuctionState
+  # Execute gRPC call
+  grpcurl -plaintext -d "$JSON_PAYLOAD" $GRPC_URL auction.AuctionService/GetAuctionState
 }
 
 get_latest_tob() {
-    CHAIN_ID=1
+  CHAIN_ID=1
 
-    # gRPC request payload
-    JSON_PAYLOAD=$(
-        cat <<EOF
+  # gRPC request payload
+  JSON_PAYLOAD=$(
+    cat <<EOF
 {
   "chain_id": $CHAIN_ID
 }
 EOF
-    )
+  )
 
-    # Print payload for debugging
-    echo "Sending gRPC request to GetLatestTob with payload:"
-    echo "$JSON_PAYLOAD"
+  # Print payload for debugging
+  echo "Sending gRPC request to GetLatestTob with payload:"
+  echo "$JSON_PAYLOAD"
 
-    # Execute gRPC call
-    grpcurl -plaintext -d "$JSON_PAYLOAD" $GRPC_URL auction.AuctionService/GetLatestTob
+  # Execute gRPC call
+  grpcurl -plaintext -d "$JSON_PAYLOAD" $GRPC_URL auction.AuctionService/GetLatestTob
 }
 
 get_quote() {
-    # Report data in base64 (or hex) format
-    REPORT_DATA=${1:-"testreportdata"}
+  # Report data in base64 (or hex) format
+  REPORT_DATA=${1:-"testreportdata"}
 
-    # gRPC request payload
-    JSON_PAYLOAD=$(
-        cat <<EOF
+  # gRPC request payload
+  JSON_PAYLOAD=$(
+    cat <<EOF
 {
   "report_data": "$REPORT_DATA"
 }
 EOF
-    )
+  )
 
-    # Print payload for debugging
-    echo "Sending gRPC request to GetQuote with payload:"
-    echo "$JSON_PAYLOAD"
+  # Print payload for debugging
+  echo "Sending gRPC request to GetQuote with payload:"
+  echo "$JSON_PAYLOAD"
 
-    # Execute gRPC call
-    grpcurl -plaintext -d "$JSON_PAYLOAD" $GRPC_URL attest.AttestService/GetQuote
+  # Execute gRPC call
+  grpcurl -plaintext -d "$JSON_PAYLOAD" $GRPC_URL attest.AttestService/GetQuote
 }
 
 # Main script logic
 case $1 in
 add_auction)
-    add_auction "$2"
-    ;;
+  add_auction "$2"
+  ;;
 submit_bids)
-    submit_bids
-    ;;
+  submit_bids
+  ;;
 get_auction_info)
-    get_auction_info
-    ;;
+  get_auction_info
+  ;;
 get_auction_state)
-    get_auction_state
-    ;;
+  get_auction_state
+  ;;
 get_latest_tob)
-    get_latest_tob
-    ;;
+  get_latest_tob
+  ;;
 get_quote)
-    get_quote "$2"
-    ;;
+  get_quote "$2"
+  ;;
 *)
-    echo "Usage: $0 {add_auction|submit_bids|get_auction_info|get_auction_state|get_latest_tob|get_quote} [arguments]"
-    exit 1
-    ;;
+  echo "Usage: $0 {add_auction|submit_bids|get_auction_info|get_auction_state|get_latest_tob|get_quote} [arguments]"
+  exit 1
+  ;;
 esac

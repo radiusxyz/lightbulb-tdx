@@ -7,7 +7,7 @@ option go_package = "github.com/radiusxyz/lightbulb-proto/proto/attest";
 import "proto/tdx/quote.proto";
 
 service AttestService {
-  rpc GenerateQuote (GetQuoteRequest) returns (GetQuoteResponse);
+  rpc GetQuote (GetQuoteRequest) returns (GetQuoteResponse);
 }
 
 message GetQuoteRequest {
