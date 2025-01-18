@@ -2,46 +2,37 @@ package attest
 
 import (
 	"context"
+	"fmt"
 	"log"
 
-	tdxClient "github.com/google/go-tdx-guest/client"
-
-	tdxpb "github.com/google/go-tdx-guest/proto/tdx"
 	attestpb "github.com/radiusxyz/lightbulb-tdx/proto/attest"
 )
 
 type Server struct {
-	attestpb.UnimplementedAttestServiceServer
+    attestpb.UnimplementedAttestServiceServer
+    tdxClient TDXClientInterface
 }
 
-func NewServer() *Server {
-	return &Server{}
+// NewServer creates a new server with a TDXClientInterface.
+func NewServer(client TDXClientInterface) *Server {
+    return &Server{
+        tdxClient: client,
+    }
 }
 
-// Attest implements the AttestServiceServer interface.
 func (s *Server) GetQuote(ctx context.Context, req *attestpb.GetQuoteRequest) (*attestpb.GetQuoteResponse, error) {
-	log.Printf("Received Attest request for report_data=%x", req.GetReportData())
-
-	quoteProvider, err := tdxClient.GetQuoteProvider()
+	// Get the quote
+	quoteProto, err := GetQuote(req.GetReportData(), s.tdxClient)
 	if err != nil {
-		log.Fatalf("Failed to get quote provider: %v", err)
-	}
-	var reportData [64]byte
-	copy(reportData[:], req.GetReportData())
-
-	quote, err := tdxClient.GetQuote(quoteProvider, reportData)
-	if err != nil {
-		log.Fatalf("Failed to get quote: %v", err)
+		return nil, fmt.Errorf("failed to get quote: %v", err)
 	}
 
-	quoteProto := ConvertQuoteV4ToQuote(quote.(*tdxpb.QuoteV4))
+    // Debug: Print RTMR values
+    for i, rtmr := range quoteProto.TdQuoteBody.Rtmrs {
+        log.Printf("rtmr[%d]: %x", i, rtmr)
+    }
 
-	// Debug: Print RTMR values.
-	for i, rtmr := range quoteProto.TdQuoteBody.Rtmrs {
-		log.Printf("rtmr[%d]: %x", i, rtmr)
-	}
-
-	return &attestpb.GetQuoteResponse{
-		Quote: quoteProto,
-	}, nil
+    return &attestpb.GetQuoteResponse{
+        Quote: quoteProto,
+    }, nil
 }

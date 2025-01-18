@@ -21,10 +21,12 @@ func main() {
 	}
 	log.Println("Server listening on port 50051...")
 
+	// Create gRPC server and TDX client
 	grpcServer := grpc.NewServer()
+	tdxClient := attest.NewTDXClientWrapper()
 
 	// Create and register services
-	attestServer := attest.NewServer()
+	attestServer := attest.NewServer(tdxClient)
 	auctionServer := auction.NewServer()
 
 	attestpb.RegisterAttestServiceServer(grpcServer, attestServer)
