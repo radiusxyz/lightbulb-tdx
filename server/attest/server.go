@@ -6,8 +6,8 @@ import (
 
 	tdxClient "github.com/google/go-tdx-guest/client"
 
-	tdxpb "github.com/google/go-tdx-guest/proto/tdx"
 	attestpb "github.com/radiusxyz/lightbulb-tdx/proto/attest"
+	tdxpb "github.com/radiusxyz/lightbulb-tdx/proto/tdx"
 )
 
 type Server struct {
@@ -19,7 +19,7 @@ func NewServer() *Server {
 }
 
 // Attest implements the AttestServiceServer interface.
-func (s *Server) Attest(ctx context.Context, req *attestpb.GetQuoteRequest) (*attestpb.GetQuoteResponse, error) {
+func (s *Server) GetQuote(ctx context.Context, req *attestpb.GetQuoteRequest) (*attestpb.GetQuoteResponse, error) {
 	log.Printf("Received Attest request for report_data=%x", req.GetReportData())
 
 	quoteProvider, err := tdxClient.GetQuoteProvider()

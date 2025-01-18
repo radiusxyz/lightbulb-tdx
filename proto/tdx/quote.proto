@@ -15,9 +15,9 @@
 syntax = "proto3";
 
 // Package tdx represents a TDX attestation quote.
-package tdx;
+package td;
 
-option go_package = "github.com/google/go-tdx-guest/proto/tdx";
+option go_package = "github.com/radiusxyz/lightbulb-tdx/proto/tdx";
 
 message QuoteV4 {
   // Header of quote structure

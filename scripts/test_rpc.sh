@@ -168,7 +168,7 @@ EOF
 
 get_quote() {
   # Report data in base64 (or hex) format
-  REPORT_DATA=${1:-"testreportdata"}
+  REPORT_DATA=${1:-"dGVzdHJlcG9ydGRhdGE="} # "testreportdata"
 
   # gRPC request payload
   JSON_PAYLOAD=$(

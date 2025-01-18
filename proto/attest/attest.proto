@@ -15,5 +15,5 @@ message GetQuoteRequest {
 }
 
 message GetQuoteResponse {
-  tdx.QuoteV4 quote = 1;
+  td.QuoteV4 quote = 1;
 }
