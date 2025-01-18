@@ -8,6 +8,8 @@ import (
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/radiusxyz/lightbulb-tdx/attest"
 )
 
 const (
@@ -16,12 +18,13 @@ const (
 
 // AuctionWorker manages auctions in a queue, ensuring they are processed by start time.
 type AuctionWorker struct {
-	chainID      int64           // Unique identifier for the worker.
-	state        *AuctionState   // Holds the current state of the auction being processed.
-	mu           sync.RWMutex    // RWMutex for protecting shared resources.
-	queueCond    *sync.Cond      // Condition variable to handle empty queue waiting.
-	auctionQueue []AuctionInfo   // Queue of auctions sorted by StartTime.
-	interruptCh  chan struct{}   // Channel to interrupt waiting when queue changes.
+	chainID      int64                     // Unique identifier for the worker.
+	state        *AuctionState             // Holds the current state of the auction being processed.
+	mu           sync.RWMutex              // RWMutex for protecting shared resources.
+	queueCond    *sync.Cond                // Condition variable to handle empty queue waiting.
+	auctionQueue []AuctionInfo             // Queue of auctions sorted by StartTime.
+	interruptCh  chan struct{}   		   // Channel to interrupt waiting when queue changes.
+	tdxClient    attest.TDXClientInterface // TDX client for quote generation.
 }
 
 // NewAuctionWorker initializes a new AuctionWorker and starts its queue processor.
@@ -30,6 +33,7 @@ func NewAuctionWorker(chainID int64) *AuctionWorker {
 		chainID:     chainID,
 		state:       &AuctionState{},
 		interruptCh: make(chan struct{}, 1), // Buffered channel to avoid blocking.
+		tdxClient:   attest.NewTDXClientWrapper(),
 	}
 	worker.queueCond = sync.NewCond(&worker.mu)
 
@@ -205,12 +209,12 @@ func (w *AuctionWorker) StartQueueProcessor(ctx context.Context) {
 
 		w.auctionQueue = w.auctionQueue[1:]
 		w.mu.Unlock()
-		w.startAuction(ctx, nextAuction)
+		w.runAuction(ctx, nextAuction)
 	}
 }
 
-// startAuction initializes and processes a single auction.
-func (w *AuctionWorker) startAuction(ctx context.Context, info AuctionInfo) {
+// runAuction initializes and processes a single auction.
+func (w *AuctionWorker) runAuction(ctx context.Context, info AuctionInfo) {
 	if err := w.initializeAuction(info); err != nil {
 		log.Printf("[Worker %d] Failed to start auction %s: %v\n", w.chainID, info.AuctionID, err)
 		return
@@ -227,6 +231,15 @@ func (w *AuctionWorker) startAuction(ctx context.Context, info AuctionInfo) {
 	select {
 	case <-done:
 		log.Printf("[Worker %d] Auction (ID: %s) completed.\n", w.chainID, info.AuctionID)
+
+		// Call GetQuote after the auction is completed.
+		quote, err := attest.GetQuote([]byte("report_data"), w.tdxClient)
+		if err != nil {
+			log.Printf("[Worker %d] Failed to get quote: %v\n", w.chainID, err)
+		} else {
+			log.Printf("[Worker %d] Quote: %v\n", w.chainID, quote)
+		}
+
 	case <-ctx.Done():
 		log.Printf("[Worker %d] Context canceled. Stopping auction (ID: %s).\n", w.chainID, info.AuctionID)
 	}

@@ -7,8 +7,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/radiusxyz/lightbulb-tdx/server/attest"
-	"github.com/radiusxyz/lightbulb-tdx/server/auction"
+	"github.com/radiusxyz/lightbulb-tdx/attest"
+	"github.com/radiusxyz/lightbulb-tdx/auction"
 
 	attestpb "github.com/radiusxyz/lightbulb-tdx/proto/attest"
 	auctionpb "github.com/radiusxyz/lightbulb-tdx/proto/auction"
