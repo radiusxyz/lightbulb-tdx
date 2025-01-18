@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"sort"
 	"sync"
 	"time"
@@ -50,7 +51,7 @@ func (w *AuctionWorker) initializeAuction(info AuctionInfo) error {
 	w.state.BidList = []Bid{}
 	w.state.IsEnded = false
 
-	fmt.Printf("[Worker %d] Initializing auction (ID: %s)\n", w.chainID, info.AuctionID)
+	log.Printf("[Worker %d] Initializing auction (ID: %s)\n", w.chainID, info.AuctionID)
 	return nil
 }
 
@@ -63,15 +64,15 @@ func (w *AuctionWorker) ProcessAuction(ctx context.Context) {
 		select {
 		case <-ticker.C:
 			if w.isEnded() {
-				fmt.Printf("[Worker %d] Auction has ended. Stopping ProcessAuction.\n", w.chainID)
+				log.Printf("[Worker %d] Auction has ended. Stopping ProcessAuction.\n", w.chainID)
 				return
 			}
 			err := w.processAuctionLogic()
 			if err != nil {
-				fmt.Printf("[Worker %d] Auction error: %v\n", w.chainID, err)
+				log.Printf("[Worker %d] Auction error: %v\n", w.chainID, err)
 			}
 		case <-ctx.Done():
-			fmt.Printf("[Worker %d] Context canceled. Stopping ProcessAuction.\n", w.chainID)
+			log.Printf("[Worker %d] Context canceled. Stopping ProcessAuction.\n", w.chainID)
 			return
 		}
 	}
@@ -102,7 +103,7 @@ func (w *AuctionWorker) processAuctionLogic() error {
 		for _, bid := range w.state.BidList {
 			w.state.SortedTxList = append(w.state.SortedTxList, bid.TxList...)
 		}
-		fmt.Printf("[Worker %d] Auction ended with %d transactions.\n", w.chainID, len(w.state.SortedTxList))
+		log.Printf("[Worker %d] Auction ended with %d transactions.\n", w.chainID, len(w.state.SortedTxList))
 		return nil
 	}
 
@@ -115,7 +116,7 @@ func (w *AuctionWorker) processAuctionLogic() error {
 		w.state.SortedTxList = append(w.state.SortedTxList, bid.TxList...)
 	}
 
-	fmt.Printf("[Worker %d] Auction running. Sorted transactions: %d\n", w.chainID, len(w.state.SortedTxList))
+	log.Printf("[Worker %d] Auction running. Sorted transactions: %d\n", w.chainID, len(w.state.SortedTxList))
 	return nil
 }
 
@@ -138,7 +139,7 @@ func (w *AuctionWorker) AddBids(auctionID string, bids []Bid) error {
 		return errors.New("invalid auction ID")
 	}
 	w.state.BidList = append(w.state.BidList, bids...)
-	fmt.Printf("[Worker %d] Received %d bids\n", w.chainID, len(bids))
+	log.Printf("[Worker %d] Received %d bids\n", w.chainID, len(bids))
 	return nil
 }
 
@@ -163,7 +164,7 @@ func (w *AuctionWorker) AddAuction(info AuctionInfo) error {
 	sort.Slice(w.auctionQueue, func(i, j int) bool {
 		return w.auctionQueue[i].StartTime.Before(w.auctionQueue[j].StartTime)
 	})
-	fmt.Printf("[Worker %d] Enqueued auction (ID: %s)\n", w.chainID, info.AuctionID)
+	log.Printf("[Worker %d] Enqueued auction (ID: %s)\n", w.chainID, info.AuctionID)
 
 	w.queueCond.Signal()
 	w.interrupt()
@@ -211,7 +212,7 @@ func (w *AuctionWorker) StartQueueProcessor(ctx context.Context) {
 // startAuction initializes and processes a single auction.
 func (w *AuctionWorker) startAuction(ctx context.Context, info AuctionInfo) {
 	if err := w.initializeAuction(info); err != nil {
-		fmt.Printf("[Worker %d] Failed to start auction %s: %v\n", w.chainID, info.AuctionID, err)
+		log.Printf("[Worker %d] Failed to start auction %s: %v\n", w.chainID, info.AuctionID, err)
 		return
 	}
 	subCtx, cancel := context.WithCancel(ctx)
@@ -225,9 +226,9 @@ func (w *AuctionWorker) startAuction(ctx context.Context, info AuctionInfo) {
 
 	select {
 	case <-done:
-		fmt.Printf("[Worker %d] Auction (ID: %s) completed.\n", w.chainID, info.AuctionID)
+		log.Printf("[Worker %d] Auction (ID: %s) completed.\n", w.chainID, info.AuctionID)
 	case <-ctx.Done():
-		fmt.Printf("[Worker %d] Context canceled. Stopping auction (ID: %s).\n", w.chainID, info.AuctionID)
+		log.Printf("[Worker %d] Context canceled. Stopping auction (ID: %s).\n", w.chainID, info.AuctionID)
 	}
 }
 
