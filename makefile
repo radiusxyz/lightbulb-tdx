@@ -18,21 +18,12 @@ serve: build
 clean:
 	rm -rf $(BIN_DIR)
 
-protogen: protoc-auction protoc-tdx protoc-attest
+protogen: protoc-auction protoc-attest
 
 protoc-auction:
 	protoc --go_out=$(OUT_DIR) --go_opt=paths=source_relative \
 	       --go-grpc_out=$(OUT_DIR) --go-grpc_opt=paths=source_relative \
 	       $(PROTO_DIR)/auction/auction.proto
-
-protoc-tdx:
-	protoc --go_out=$(OUT_DIR) --go_opt=paths=source_relative \
-	       --go-grpc_out=$(OUT_DIR) --go-grpc_opt=paths=source_relative \
-	       $(PROTO_DIR)/tdx/quote.proto
-	
-	protoc --go_out=$(OUT_DIR) --go_opt=paths=source_relative \
-	       --go-grpc_out=$(OUT_DIR) --go-grpc_opt=paths=source_relative \
-	       $(PROTO_DIR)/tdx/config.proto
 
 protoc-attest:
 	protoc --go_out=$(OUT_DIR) --go_opt=paths=source_relative \

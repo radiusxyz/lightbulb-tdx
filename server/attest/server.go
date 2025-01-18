@@ -6,8 +6,8 @@ import (
 
 	tdxClient "github.com/google/go-tdx-guest/client"
 
+	tdxpb "github.com/google/go-tdx-guest/proto/tdx"
 	attestpb "github.com/radiusxyz/lightbulb-tdx/proto/attest"
-	tdxpb "github.com/radiusxyz/lightbulb-tdx/proto/tdx"
 )
 
 type Server struct {
@@ -34,7 +34,7 @@ func (s *Server) GetQuote(ctx context.Context, req *attestpb.GetQuoteRequest) (*
 		log.Fatalf("Failed to get quote: %v", err)
 	}
 
-	quoteProto := quote.(*tdxpb.QuoteV4)
+	quoteProto := ConvertQuoteV4ToQuote(quote.(*tdxpb.QuoteV4))
 
 	// Debug: Print RTMR values.
 	for i, rtmr := range quoteProto.TdQuoteBody.Rtmrs {
