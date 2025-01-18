@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package attest;
 
-option go_package = "github.com/radiusxyz/lightbulb-proto/proto/attest";
+option go_package = "github.com/radiusxyz/lightbulb-tdx/proto/attest";
 
 import "proto/tdx/quote.proto";
 
