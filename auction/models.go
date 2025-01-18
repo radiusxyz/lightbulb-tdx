@@ -41,6 +41,34 @@ type AuctionState struct {
 	IsEnded      bool        // Indicates whether the auction has ended.
 }
 
+func ConvertProtobufTxToDomain(pbTx *auctionpb.Tx) Tx {
+	return Tx{
+		TxData: pbTx.GetTxData(),
+	}
+}
+
+func ConvertProtobufTxsToDomain(pbTxs []*auctionpb.Tx) []Tx {
+	var domainTxs []Tx
+	for _, pbTx := range pbTxs {
+		domainTxs = append(domainTxs, ConvertProtobufTxToDomain(pbTx))
+	}
+	return domainTxs
+}
+
+func ConvertDomainTxToProtobuf(domainTx Tx) *auctionpb.Tx {
+	return &auctionpb.Tx{
+		TxData: domainTx.TxData,
+	}
+}
+
+func ConvertDomainTxsToProtobuf(domainTxs []Tx) []*auctionpb.Tx {
+	var pbTxs []*auctionpb.Tx
+	for _, domainTx := range domainTxs {
+		pbTxs = append(pbTxs, ConvertDomainTxToProtobuf(domainTx))
+	}
+	return pbTxs
+}
+
 // ConvertProtobufBidToDomainBid converts a protobuf Bid to a domain Bid.
 func ConvertProtobufBidToDomain(pbBid *auctionpb.Bid) Bid {
 	var txList []Tx
@@ -69,32 +97,6 @@ func ConvertProtobufBidsToDomain(pbBids []*auctionpb.Bid) []Bid {
 	return domainBids
 }
 
-func ConvertProtobufAuctionInfoToDomain(pbAuctionInfo *auctionpb.AuctionInfo) AuctionInfo {
-	return AuctionInfo{
-		AuctionID:       pbAuctionInfo.GetAuctionId(),
-		ChainID:         pbAuctionInfo.GetChainId(),
-		StartTime:       time.Unix(0, pbAuctionInfo.GetStartTime()*int64(time.Millisecond)),
-		EndTime:         time.Unix(0, pbAuctionInfo.GetEndTime()*int64(time.Millisecond)),
-		SellerAddress:   pbAuctionInfo.GetSellerAddress(),
-		BlockNumber:     pbAuctionInfo.GetBlockNumber(),
-		BlockspaceSize:  pbAuctionInfo.GetBlockspaceSize(),
-		SellerSignature: pbAuctionInfo.GetSellerSignature(),
-	}
-}
-
-func ConvertDomainAuctionInfoToProtobuf(domainAuctionInfo AuctionInfo) *auctionpb.AuctionInfo {
-	return &auctionpb.AuctionInfo{
-		AuctionId:       domainAuctionInfo.AuctionID,
-		ChainId:         domainAuctionInfo.ChainID,
-		StartTime:       domainAuctionInfo.StartTime.UnixNano() / int64(time.Millisecond),
-		EndTime:         domainAuctionInfo.EndTime.UnixNano() / int64(time.Millisecond),
-		SellerAddress:   domainAuctionInfo.SellerAddress,
-		BlockNumber:     domainAuctionInfo.BlockNumber,
-		BlockspaceSize:  domainAuctionInfo.BlockspaceSize,
-		SellerSignature: domainAuctionInfo.SellerSignature,
-	}
-}
-
 func ConvertDomainBidToProtobuf(domainBid Bid) *auctionpb.Bid {
 	var pbTxList []*auctionpb.Tx
 	for _, tx := range domainBid.TxList {
@@ -121,32 +123,30 @@ func ConvertDomainBidsToProtobuf(domainBids []Bid) []*auctionpb.Bid {
 	return pbBids
 }
 
-func ConvertDomainTxToProtobuf(domainTx Tx) *auctionpb.Tx {
-	return &auctionpb.Tx{
-		TxData: domainTx.TxData,
+func ConvertProtobufAuctionInfoToDomain(pbAuctionInfo *auctionpb.AuctionInfo) AuctionInfo {
+	return AuctionInfo{
+		AuctionID:       pbAuctionInfo.GetAuctionId(),
+		ChainID:         pbAuctionInfo.GetChainId(),
+		StartTime:       time.Unix(0, pbAuctionInfo.GetStartTime()*int64(time.Millisecond)),
+		EndTime:         time.Unix(0, pbAuctionInfo.GetEndTime()*int64(time.Millisecond)),
+		SellerAddress:   pbAuctionInfo.GetSellerAddress(),
+		BlockNumber:     pbAuctionInfo.GetBlockNumber(),
+		BlockspaceSize:  pbAuctionInfo.GetBlockspaceSize(),
+		SellerSignature: pbAuctionInfo.GetSellerSignature(),
 	}
 }
 
-func ConvertDomainTxsToProtobuf(domainTxs []Tx) []*auctionpb.Tx {
-	var pbTxs []*auctionpb.Tx
-	for _, domainTx := range domainTxs {
-		pbTxs = append(pbTxs, ConvertDomainTxToProtobuf(domainTx))
+func ConvertDomainAuctionInfoToProtobuf(domainAuctionInfo AuctionInfo) *auctionpb.AuctionInfo {
+	return &auctionpb.AuctionInfo{
+		AuctionId:       domainAuctionInfo.AuctionID,
+		ChainId:         domainAuctionInfo.ChainID,
+		StartTime:       domainAuctionInfo.StartTime.UnixNano() / int64(time.Millisecond),
+		EndTime:         domainAuctionInfo.EndTime.UnixNano() / int64(time.Millisecond),
+		SellerAddress:   domainAuctionInfo.SellerAddress,
+		BlockNumber:     domainAuctionInfo.BlockNumber,
+		BlockspaceSize:  domainAuctionInfo.BlockspaceSize,
+		SellerSignature: domainAuctionInfo.SellerSignature,
 	}
-	return pbTxs
-}
-
-func ConvertProtobufTxToDomain(pbTx *auctionpb.Tx) Tx {
-	return Tx{
-		TxData: pbTx.GetTxData(),
-	}
-}
-
-func ConvertProtobufTxsToDomain(pbTxs []*auctionpb.Tx) []Tx {
-	var domainTxs []Tx
-	for _, pbTx := range pbTxs {
-		domainTxs = append(domainTxs, ConvertProtobufTxToDomain(pbTx))
-	}
-	return domainTxs
 }
 
 func ConvertProtobufAuctionStateToDomain(pbAuctionState *auctionpb.AuctionState) AuctionState {
