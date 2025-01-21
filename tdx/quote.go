@@ -1,7 +1,8 @@
-package attest
+package tdx
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/google/go-tdx-guest/client"
 
@@ -15,14 +16,19 @@ import (
 type TDXClientInterface interface {
 	GetQuoteProvider() (interface{}, error)                                  // Returns a quote provider
 	GetQuote(provider interface{}, reportData [64]byte) (interface{}, error) // Returns a quote object
+	GetRtmr() ([]byte, error)                                                // Returns the RTMR value
 }
 
 // TDXClient is a wrapper around the tdxClient package.
-type TDXClient struct{}
+type TDXClient struct{
+	rtmrProvider *RtmrProvider
+}
 
 // NewTDXClient creates a new TDXClient.
 func NewTDXClient() *TDXClient {
-	return &TDXClient{}
+	return &TDXClient{
+		rtmrProvider: DefaultRtmrProvider(),
+	}
 }
 
 // GetQuoteProvider wraps tdxClient.GetQuoteProvider().
@@ -35,51 +41,51 @@ func (w *TDXClient) GetQuote(provider interface{}, reportData [64]byte) (interfa
 	return client.GetQuote(provider, reportData)
 }
 
-// MockTDXClient is a mock implementation of TDXClientInterface for non-TDX environments.
-type MockTDXClient struct{}
+type MockTDXClient struct {
+	rtmrProvider *RtmrProvider
+}
 
-// NewMockTDXClient creates a new instance of MockTDXClient.
 func NewMockTDXClient() *MockTDXClient {
-	return &MockTDXClient{}
-}
-
-// GetQuoteProvider mocks the retrieval of a quote provider.
-func (m *MockTDXClient) GetQuoteProvider() (interface{}, error) {
-	// Return a dummy provider
-	return "mockQuoteProvider", nil
-}
-
-// GetQuote mocks the retrieval of a quote.
-func (m *MockTDXClient) GetQuote(provider interface{}, reportData [64]byte) (interface{}, error) {
-	if provider != "mockQuoteProvider" {
-		return nil, fmt.Errorf("invalid mock provider: %v", provider)
+	return &MockTDXClient{
+		rtmrProvider: DefaultRtmrProvider(),
 	}
+}
 
-	// Create a mock quote
+type MockQuoteProvider struct {}
+
+func (m *MockTDXClient) GetQuoteProvider() (interface{}, error) {
+	return &MockQuoteProvider{}, nil
+}
+
+func (m *MockTDXClient) GetQuote(_provider interface{}, reportData [64]byte) (interface{}, error) {
 	mockQuote := &tdxpb.QuoteV4{
-        Header: &tdxpb.Header{
-            Version: 1,
-        },
+		Header: &tdxpb.Header{
+			Version: 1,
+		},
 		TdQuoteBody: &tdxpb.TDQuoteBody{
-            ReportData: reportData[:],
-	    },
-    }
+			ReportData: reportData[:],
+		},
+	}
 
 	return mockQuote, nil
 }
 
 // GetQuote retrieves a TDX quote using the given TDX client implementation.
-func GetQuote(reportDataInput []byte, tdxClient TDXClientInterface) (*attestpb.Quote, error) {
-	// Check input validity
-	if len(reportDataInput) > 64 {
-		return nil, fmt.Errorf("report_data exceeds maximum length of 64 bytes")
-	}
-
+func GetQuote(tdxClient TDXClientInterface) (*attestpb.Quote, error) {
 	// Get the quote provider
 	quoteProvider, err := tdxClient.GetQuoteProvider()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get quote provider: %w", err)
 	}
+
+	reportDataInput := make([]byte, 64)
+
+	if os.Getenv("TDX_VERSION") == "1.0" {
+		reportDataInput, err = tdxClient.GetRtmr()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get RTMR: %w", err)
+		}
+	}	
 
 	// Prepare reportData array
 	var reportData [64]byte
@@ -98,4 +104,26 @@ func GetQuote(reportDataInput []byte, tdxClient TDXClientInterface) (*attestpb.Q
 	}
 
 	return utils.ConvertQuoteV4ToQuote(convertedQuote), nil
+}
+
+func (c *TDXClient) GetRtmr() ([]byte, error) {
+	// Update RTMR[2] with IMA Event Logs
+	err := c.rtmrProvider.UpdateImaRtmr()
+	if err != nil {
+		return nil, fmt.Errorf("failed to update IMA RTMR: %w", err)
+	}
+
+	// Get the RTMR[2] value
+	return c.rtmrProvider.GetRtmrValues()[2], nil;
+}
+
+func (c *MockTDXClient) GetRtmr() ([]byte, error) {
+	// Update RTMR[2] with IMA Event Logs
+	err := c.rtmrProvider.UpdateImaRtmr()
+	if err != nil {
+		return nil, fmt.Errorf("failed to update IMA RTMR: %w", err)
+	}
+
+	// Get the RTMR[2] value
+	return c.rtmrProvider.GetRtmrValues()[2], nil;
 }

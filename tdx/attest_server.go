@@ -1,4 +1,4 @@
-package attest
+package tdx
 
 import (
 	"context"
@@ -22,7 +22,7 @@ func NewServer(client TDXClientInterface) *Server {
 
 func (s *Server) GetQuote(ctx context.Context, req *attestpb.GetQuoteRequest) (*attestpb.GetQuoteResponse, error) {
 	// Get the quote
-	quoteProto, err := GetQuote(req.GetReportData(), s.tdxClient)
+	quoteProto, err := GetQuote(s.tdxClient)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get quote: %v", err)
 	}
