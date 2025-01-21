@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"sort"
 	"sync"
 	"time"
@@ -30,12 +31,25 @@ type AuctionWorker struct {
 
 // NewAuctionWorker initializes a new AuctionWorker and starts its queue processor.
 func NewAuctionWorker(chainID int64, rtmrExtender *attest.IMAEventLogExtender) *AuctionWorker {
+	var tdxClient attest.TDXClientInterface
+	
+	env := os.Getenv("ENV")
+
+	if env == "TDX" {
+		tdxClient = attest.NewTDXClient()
+	} else if env == "NON_TDX" {
+		tdxClient = attest.NewMockTDXClient()
+	} else {
+		log.Printf("[Warning] Unknown environment '%s'. Defaulting to MockTDXClient.", env)
+		tdxClient = attest.NewMockTDXClient()
+	}
+
 	worker := &AuctionWorker{
-		chainID:     chainID,
-		state:       &AuctionState{},
-		interruptCh: make(chan struct{}, 1), // Buffered channel to avoid blocking.
-		tdxClient:   attest.NewTDXClientWrapper(),
+		chainID:      chainID,
+		state:        &AuctionState{},
+		tdxClient:    tdxClient,
 		rtmrExtender: rtmrExtender,
+		interruptCh:  make(chan struct{}, 1),
 	}
 	worker.queueCond = sync.NewCond(&worker.mu)
 
@@ -221,6 +235,17 @@ func (w *AuctionWorker) runAuction(ctx context.Context, info AuctionInfo) {
 		log.Printf("[Worker %d] Failed to start auction %s: %v\n", w.chainID, info.AuctionID, err)
 		return
 	}
+
+	// Defer getting a quote after the auction ends.
+	defer func() {
+		quote, err := attest.GetQuote([]byte("report_data"), w.tdxClient)
+		if err != nil {
+			log.Printf("[Worker %d] Failed to get quote: %v\n", w.chainID, err)
+		} else {
+			log.Printf("[Worker %d] Quote: %v\n", w.chainID, quote)
+		}
+	}()
+
 	subCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -233,19 +258,6 @@ func (w *AuctionWorker) runAuction(ctx context.Context, info AuctionInfo) {
 	select {
 	case <-done:
 		log.Printf("[Worker %d] Auction (ID: %s) completed.\n", w.chainID, info.AuctionID)
-
-		// Extend the event log to the RTMR[3].
-		// In a real scenario, this should be extended automatically to RTMR[2] by kernel.
-		err := w.rtmrExtender.ExtendLogs(3)
-
-		// Call GetQuote after the auction is completed.
-		quote, err := attest.GetQuote([]byte("report_data"), w.tdxClient)
-		if err != nil {
-			log.Printf("[Worker %d] Failed to get quote: %v\n", w.chainID, err)
-		} else {
-			log.Printf("[Worker %d] Quote: %v\n", w.chainID, quote)
-		}
-
 	case <-ctx.Done():
 		log.Printf("[Worker %d] Context canceled. Stopping auction (ID: %s).\n", w.chainID, info.AuctionID)
 	}

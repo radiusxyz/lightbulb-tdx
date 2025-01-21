@@ -1,4 +1,4 @@
-package attest
+package utils
 
 import (
 	tdxpb "github.com/google/go-tdx-guest/proto/tdx"

@@ -3,7 +3,9 @@ package main
 import (
 	"log"
 	"net"
+	"os"
 
+	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -15,15 +17,21 @@ import (
 )
 
 func main() {
-	lis, err := net.Listen("tcp", ":50051")
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
+
+	lis, err := net.Listen("tcp", ":" + os.Getenv("PORT"))
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
-	log.Println("Server listening on port 50051...")
+
+	log.Printf("Server listening on port %s in %s environment", lis.Addr(), os.Getenv("ENV"))
 
 	// Create gRPC server and TDX client
 	grpcServer := grpc.NewServer()
-	tdxClient := attest.NewTDXClientWrapper()
+	tdxClient := attest.NewTDXClient()
 
 	// Create and register services
 	attestServer := attest.NewServer(tdxClient)

@@ -7,15 +7,16 @@ import (
 	"sync"
 
 	"github.com/radiusxyz/lightbulb-tdx/attest"
+
 	auctionpb "github.com/radiusxyz/lightbulb-tdx/proto/auction"
 )
 
 type Server struct {
 	auctionpb.UnimplementedAuctionServiceServer
 
-	workers map[int64]*AuctionWorker         // Workers mapped by chain ID
+	workers      map[int64]*AuctionWorker    // Workers mapped by chain ID
 	rtmrExtender *attest.IMAEventLogExtender // Extender for RTMR values
-	mu      sync.RWMutex                     // Mutex to ensure thread-safe access to the workers map.
+	mu           sync.RWMutex                // Mutex to ensure thread-safe access to the workers map.
 }
 
 // NewServer initializes a new gRPC server instance.
