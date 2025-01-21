@@ -3,10 +3,7 @@ package auction
 import (
 	"context"
 	"fmt"
-	"log"
 	"sync"
-
-	"github.com/radiusxyz/lightbulb-tdx/attest"
 
 	auctionpb "github.com/radiusxyz/lightbulb-tdx/proto/auction"
 )
@@ -15,7 +12,6 @@ type Server struct {
 	auctionpb.UnimplementedAuctionServiceServer
 
 	workers      map[int64]*AuctionWorker    // Workers mapped by chain ID
-	rtmrExtender *attest.IMAEventLogExtender // Extender for RTMR values
 	mu           sync.RWMutex                // Mutex to ensure thread-safe access to the workers map.
 }
 
@@ -23,7 +19,6 @@ type Server struct {
 func NewServer() *Server {
 	return &Server{
 		workers: make(map[int64]*AuctionWorker),
-		rtmrExtender: attest.DefaultIMAEventLogExtender(),
 	}
 }
 
@@ -38,13 +33,8 @@ func (s *Server) AddAuction(ctx context.Context, req *auctionpb.AddAuctionReques
 	// Retrieve or create the worker for the chain
 	worker, exists := s.workers[info.ChainID]
 	if !exists {
-		worker = NewAuctionWorker(info.ChainID, s.rtmrExtender)
+		worker = NewAuctionWorker(info.ChainID)
 		s.workers[info.ChainID] = worker
-	}
-
-	// Debug: Print the worker map
-	for chainID, worker := range s.workers {
-		log.Printf("Worker %d: %v\n", chainID, worker)
 	}
 
 	// Start the auction

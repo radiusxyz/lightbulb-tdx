@@ -47,8 +47,8 @@ func (ac *Client) AddAuction(chainID int64, auctionID string, startTime, endTime
 		AuctionInfo: &auctionpb.AuctionInfo{
 			ChainId:    chainID,
 			AuctionId:  auctionID,
-			StartTime:  startTime.Unix(),
-			EndTime:    endTime.Unix(),
+			StartTime:  startTime.UnixMilli(),
+			EndTime:    endTime.UnixMilli(),
 		},
 	}
 

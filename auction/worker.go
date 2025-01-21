@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/radiusxyz/lightbulb-tdx/attest"
+	"github.com/radiusxyz/lightbulb-tdx/tdx"
 )
 
 const (
@@ -25,30 +25,28 @@ type AuctionWorker struct {
 	queueCond    *sync.Cond                  // Condition variable to handle empty queue waiting.
 	auctionQueue []AuctionInfo               // Queue of auctions sorted by StartTime.
 	interruptCh  chan struct{}   		     // Channel to interrupt waiting when queue changes.
-	tdxClient    attest.TDXClientInterface   // TDX client for quote generation.
-	rtmrExtender *attest.IMAEventLogExtender // Extender for RTMR values
+	tdxClient    tdx.TDXClientInterface      // TDX client for quote generation.
 }
 
 // NewAuctionWorker initializes a new AuctionWorker and starts its queue processor.
-func NewAuctionWorker(chainID int64, rtmrExtender *attest.IMAEventLogExtender) *AuctionWorker {
-	var tdxClient attest.TDXClientInterface
+func NewAuctionWorker(chainID int64) *AuctionWorker {
+	var tdxClient tdx.TDXClientInterface
 	
 	env := os.Getenv("ENV")
 
 	if env == "TDX" {
-		tdxClient = attest.NewTDXClient()
-	} else if env == "NON_TDX" {
-		tdxClient = attest.NewMockTDXClient()
+		tdxClient = tdx.NewTDXClient()
+	} else if env == "MOCK_TDX" {
+		tdxClient = tdx.NewMockTDXClient()
 	} else {
 		log.Printf("[Warning] Unknown environment '%s'. Defaulting to MockTDXClient.", env)
-		tdxClient = attest.NewMockTDXClient()
+		tdxClient = tdx.NewMockTDXClient()
 	}
 
 	worker := &AuctionWorker{
 		chainID:      chainID,
 		state:        &AuctionState{},
 		tdxClient:    tdxClient,
-		rtmrExtender: rtmrExtender,
 		interruptCh:  make(chan struct{}, 1),
 	}
 	worker.queueCond = sync.NewCond(&worker.mu)
@@ -238,7 +236,7 @@ func (w *AuctionWorker) runAuction(ctx context.Context, info AuctionInfo) {
 
 	// Defer getting a quote after the auction ends.
 	defer func() {
-		quote, err := attest.GetQuote([]byte("report_data"), w.tdxClient)
+		quote, err := tdx.GetQuote(w.tdxClient)
 		if err != nil {
 			log.Printf("[Worker %d] Failed to get quote: %v\n", w.chainID, err)
 		} else {

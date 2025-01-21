@@ -11,8 +11,6 @@ require (
 
 require (
 	github.com/google/go-configfs-tsm v0.3.2 // indirect
-	github.com/google/go-eventlog v0.0.2 // indirect
-	github.com/google/go-tpm v0.9.3 // indirect
 	github.com/google/logger v1.1.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.32.0 // indirect
