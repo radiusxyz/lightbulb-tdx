@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
+	"runtime/pprof"
 	"sync"
 	"testing"
 	"time"
@@ -34,10 +36,35 @@ type AuctionMeta struct {
 }
 
 // BenchmarkAuctionWorker shows how to assign subsets of auctions to different clients.
-func BenchmarkAuctionWorker(t *testing.B) {
-    // 1) Load environment
-    err := godotenv.Load()
+func BenchmarkAuctionWorker(b *testing.B) {
+    // Start CPU profiling
+	cpuFile, err := os.Create("cpu.prof")
+	if err != nil {
+		b.Fatalf("could not create CPU profile: %v", err)
+	}
+	defer cpuFile.Close()
+
+	if err := pprof.StartCPUProfile(cpuFile); err != nil {
+		b.Fatalf("could not start CPU profile: %v", err)
+	}
+	defer pprof.StopCPUProfile()
+
+    // Start memory profiling
+    memFile, err := os.Create("mem.prof")
     if err != nil {
+        b.Fatalf("could not create memory profile: %v", err)
+    }
+    defer memFile.Close()
+
+    runtime.GC() // get up-to-date statistics
+
+    if err := pprof.WriteHeapProfile(memFile); err != nil {
+        b.Fatalf("could not write memory profile: %v", err)
+    }
+    defer pprof.StopCPUProfile()
+
+    // 1) Load environment
+    if err := godotenv.Load(); err != nil {
         log.Fatalf("Error loading .env file: %v", err)
     }
     port := os.Getenv("PORT")
@@ -46,11 +73,11 @@ func BenchmarkAuctionWorker(t *testing.B) {
     // 2) Load scenario
     scenarioData, err := os.ReadFile("scenario.yaml")
     if err != nil {
-        t.Fatalf("Failed to read YAML file: %v", err)
+        b.Fatalf("Failed to read YAML file: %v", err)
     }
     var scenario Scenario
     if err := yaml.Unmarshal(scenarioData, &scenario); err != nil {
-        t.Fatalf("Failed to unmarshal YAML: %v", err)
+        b.Fatalf("Failed to unmarshal YAML: %v", err)
     }
 
     // 3) Prepare WaitGroup
@@ -59,7 +86,7 @@ func BenchmarkAuctionWorker(t *testing.B) {
     // 4) Manager Client (creates auctions)
     managerClient, err := auction.NewClient(fmt.Sprintf("%s:%s", serverAddr, port))
     if err != nil {
-        t.Fatalf("Failed to create Manager Client: %v", err)
+        b.Fatalf("Failed to create Manager Client: %v", err)
     }
     defer managerClient.Close()
 
