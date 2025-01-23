@@ -84,8 +84,6 @@ message Tx {
 
 // Represents a bid submitted by a buyer.
 message Bid {
-  string auction_id = 1;       // The unique identifier of the auction.
-  int64 chain_id = 2;          // The unique identifier of the chain.
   string bidder_addr = 3;      // The address of the bidder.
   int64 bid_amount = 4;        // The amount of the bid.
   string bidder_signature = 5; // The signature of the bidder.

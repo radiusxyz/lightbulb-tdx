@@ -2,7 +2,6 @@ package auction
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -151,10 +150,10 @@ func (w *AuctionWorker) AddBids(auctionID string, bids []Bid) error {
 	defer w.mu.Unlock()
 
 	if w.state.IsEnded {
-		return errors.New("auction has already ended")
+		return fmt.Errorf("auction %s has ended at %s", w.state.AuctionInfo.AuctionID, w.state.AuctionInfo.EndTime)
 	}
 	if w.state.AuctionInfo.AuctionID != auctionID {
-		return errors.New("invalid auction ID")
+		return fmt.Errorf("auction ID %s does not match current auction %s", auctionID, w.state.AuctionInfo.AuctionID)
 	}
 	w.state.BidList = append(w.state.BidList, bids...)
 	log.Printf("[Worker %d] Received %d bids\n", w.chainID, len(bids))

@@ -1,0 +1,6 @@
+auction_time: 2
+ordering_interval: 0.5
+chain_num: 3
+auction_num: 3
+client_num: 10
+request_freq: 10

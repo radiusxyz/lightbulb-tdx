@@ -79,8 +79,6 @@ func ConvertProtobufBidToDomain(pbBid *auctionpb.Bid) Bid {
 	}
 
 	return Bid{
-		ChainID:         pbBid.GetChainId(),
-		AuctionID:       pbBid.GetAuctionId(),
 		BidderAddr:      pbBid.GetBidderAddr(),
 		BidAmount:       pbBid.GetBidAmount(),
 		BidderSignature: pbBid.GetBidderSignature(),
@@ -106,8 +104,6 @@ func ConvertDomainBidToProtobuf(domainBid Bid) *auctionpb.Bid {
 	}
 
 	return &auctionpb.Bid{
-		ChainId:         domainBid.ChainID,
-		AuctionId:       domainBid.AuctionID,
 		BidderAddr:      domainBid.BidderAddr,
 		BidAmount:       domainBid.BidAmount,
 		BidderSignature: domainBid.BidderSignature,
