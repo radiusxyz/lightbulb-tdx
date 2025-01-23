@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"runtime"
-	"runtime/pprof"
 	"sync"
 	"testing"
 	"time"
@@ -37,32 +35,6 @@ type AuctionMeta struct {
 
 // BenchmarkAuctionWorker shows how to assign subsets of auctions to different clients.
 func BenchmarkAuctionWorker(b *testing.B) {
-    // Start CPU profiling
-	cpuFile, err := os.Create("cpu.prof")
-	if err != nil {
-		b.Fatalf("could not create CPU profile: %v", err)
-	}
-	defer cpuFile.Close()
-
-	if err := pprof.StartCPUProfile(cpuFile); err != nil {
-		b.Fatalf("could not start CPU profile: %v", err)
-	}
-	defer pprof.StopCPUProfile()
-
-    // Start memory profiling
-    memFile, err := os.Create("mem.prof")
-    if err != nil {
-        b.Fatalf("could not create memory profile: %v", err)
-    }
-    defer memFile.Close()
-
-    runtime.GC() // get up-to-date statistics
-
-    if err := pprof.WriteHeapProfile(memFile); err != nil {
-        b.Fatalf("could not write memory profile: %v", err)
-    }
-    defer pprof.StopCPUProfile()
-
     // 1) Load environment
     if err := godotenv.Load(); err != nil {
         log.Fatalf("Error loading .env file: %v", err)
@@ -184,7 +156,6 @@ func BenchmarkAuctionWorker(b *testing.B) {
                     time.Sleep(requestInterval)
                 }
             }
-
             log.Printf("[Client %d] Finished all requests.", clientID)
         }(i)
     }

@@ -4,6 +4,8 @@ import (
 	"log"
 	"net"
 	"os"
+	"runtime"
+	"runtime/pprof"
 
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
@@ -17,11 +19,41 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
+	// Load environment variables
+	if err := godotenv.Load(); err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
+	
+	// Enable profiling if PROFILING is set to true
+	if os.Getenv("PROFILING") == "true" {
+		// Start CPU profiling
+		cpuFile, err := os.Create("cpu.prof")
+		if err != nil {
+			log.Fatalf("could not create CPU profile: %v", err)
+		}
+		defer cpuFile.Close()
 
+		if err := pprof.StartCPUProfile(cpuFile); err != nil {
+			log.Fatalf("could not start CPU profile: %v", err)
+		}
+		defer pprof.StopCPUProfile()
+
+		// Start memory profiling
+		memFile, err := os.Create("mem.prof")
+		if err != nil {
+			log.Fatalf("could not create memory profile: %v", err)
+		}
+		defer memFile.Close()
+
+		runtime.GC() // get up-to-date statistics
+
+		if err := pprof.WriteHeapProfile(memFile); err != nil {
+			log.Fatalf("could not write memory profile: %v", err)
+		}
+		defer pprof.StopCPUProfile()
+	}
+
+	// Listen on the specified port
 	lis, err := net.Listen("tcp", ":" + os.Getenv("PORT"))
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
@@ -43,6 +75,7 @@ func main() {
 	// Enable reflection for debugging
 	reflection.Register(grpcServer)
 
+	// Start the server
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}
