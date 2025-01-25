@@ -1,11 +1,15 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net"
 	"os"
+	"os/signal"
 	"runtime"
 	"runtime/pprof"
+	"syscall"
+	"time"
 
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
@@ -23,7 +27,7 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
-	
+
 	// Enable profiling if PROFILING is set to true
 	if os.Getenv("PROFILING") == "true" {
 		// Start CPU profiling
@@ -50,11 +54,10 @@ func main() {
 		if err := pprof.WriteHeapProfile(memFile); err != nil {
 			log.Fatalf("could not write memory profile: %v", err)
 		}
-		defer pprof.StopCPUProfile()
 	}
 
 	// Listen on the specified port
-	lis, err := net.Listen("tcp", ":" + os.Getenv("PORT"))
+	lis, err := net.Listen("tcp", ":"+os.Getenv("PORT"))
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
@@ -75,8 +78,28 @@ func main() {
 	// Enable reflection for debugging
 	reflection.Register(grpcServer)
 
-	// Start the server
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve: %v", err)
-	}
+	// Graceful shutdown setup
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	// Run the server in a goroutine
+	go func() {
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("Failed to serve: %v", err)
+		}
+	}()
+
+	// Wait for interrupt signal
+	<-stop
+	log.Println("Shutting down server gracefully...")
+
+	// Create a context with timeout for shutdown
+	_, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Gracefully stop the gRPC server
+	grpcServer.GracefulStop()
+
+	// Perform any additional cleanup tasks if necessary
+	log.Println("Server stopped")
 }
