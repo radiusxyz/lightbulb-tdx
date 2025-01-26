@@ -31,7 +31,7 @@ func main() {
 	// Enable profiling if PROFILING is set to true
 	if os.Getenv("PROFILING") == "true" {
 		// Start CPU profiling
-		cpuFile, err := os.Create("cpu.prof")
+		cpuFile, err := os.Create("bin/cpu.prof")
 		if err != nil {
 			log.Fatalf("could not create CPU profile: %v", err)
 		}
@@ -43,7 +43,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 
 		// Start memory profiling
-		memFile, err := os.Create("mem.prof")
+		memFile, err := os.Create("bin/mem.prof")
 		if err != nil {
 			log.Fatalf("could not create memory profile: %v", err)
 		}
