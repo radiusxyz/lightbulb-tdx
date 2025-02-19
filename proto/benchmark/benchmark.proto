@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package benchmark;
+
+option go_package = "github.com/radiusxyz/lightbulb-tdx/proto/benchmark";
+
+service BenchmarkService {
+    rpc Hello(HelloRequest) returns (HelloResponse);
+    rpc CPUIntensive(ComputeRequest) returns (ComputeResponse);
+    rpc MemoryIntensive(MemoryRequest) returns (MemoryResponse);
+    rpc DiskIO(IORequest) returns (IOResponse);
+    rpc Mixed(MixedRequest) returns (MixedResponse);
+}
+
+message HelloRequest {
+}
+
+message HelloResponse {
+    string message = 1;
+}
+
+message ComputeRequest {
+}
+
+message ComputeResponse {
+    double result = 1;
+}
+
+message MemoryRequest {
+}
+
+message MemoryResponse {
+    bytes hash = 1;
+}
+
+message IORequest {
+}
+
+message IOResponse {
+    bool success = 1;
+}
+
+message MixedRequest {
+}
+
+message MixedResponse {
+    bool success = 1;
+}

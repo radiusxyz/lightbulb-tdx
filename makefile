@@ -29,7 +29,7 @@ run-client: build-client
 clean:
 	rm -rf $(BIN_DIR)
 
-protogen: protoc-auction protoc-attest
+protogen: protoc-auction protoc-attest protoc-benchmark
 
 protoc-auction:
 	protoc --go_out=$(OUT_DIR) --go_opt=paths=source_relative \
@@ -40,6 +40,11 @@ protoc-attest:
 	protoc --go_out=$(OUT_DIR) --go_opt=paths=source_relative \
 	       --go-grpc_out=$(OUT_DIR) --go-grpc_opt=paths=source_relative \
 	       $(PROTO_DIR)/attest/attest.proto
+
+protoc-benchmark:
+	protoc --go_out=$(OUT_DIR) --go_opt=paths=source_relative \
+	       --go-grpc_out=$(OUT_DIR) --go-grpc_opt=paths=source_relative \
+	       $(PROTO_DIR)/benchmark/benchmark.proto
 
 reflect:
 	grpcurl -plaintext $(SERVER_ADDRESS) list

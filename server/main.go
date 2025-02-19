@@ -6,8 +6,6 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"runtime"
-	"runtime/pprof"
 	"syscall"
 	"time"
 
@@ -16,44 +14,18 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/radiusxyz/lightbulb-tdx/auction"
+	"github.com/radiusxyz/lightbulb-tdx/benchmark"
 	"github.com/radiusxyz/lightbulb-tdx/tdx"
 
 	attestpb "github.com/radiusxyz/lightbulb-tdx/proto/attest"
 	auctionpb "github.com/radiusxyz/lightbulb-tdx/proto/auction"
+	benchmarkpb "github.com/radiusxyz/lightbulb-tdx/proto/benchmark"
 )
 
 func main() {
 	// Load environment variables
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
-	}
-
-	// Enable profiling if PROFILING is set to true
-	if os.Getenv("PROFILING") == "true" {
-		// Start CPU profiling
-		cpuFile, err := os.Create("bin/cpu.prof")
-		if err != nil {
-			log.Fatalf("could not create CPU profile: %v", err)
-		}
-		defer cpuFile.Close()
-
-		if err := pprof.StartCPUProfile(cpuFile); err != nil {
-			log.Fatalf("could not start CPU profile: %v", err)
-		}
-		defer pprof.StopCPUProfile()
-
-		// Start memory profiling
-		memFile, err := os.Create("bin/mem.prof")
-		if err != nil {
-			log.Fatalf("could not create memory profile: %v", err)
-		}
-		defer memFile.Close()
-
-		runtime.GC() // get up-to-date statistics
-
-		if err := pprof.WriteHeapProfile(memFile); err != nil {
-			log.Fatalf("could not write memory profile: %v", err)
-		}
 	}
 
 	// Listen on the specified port
@@ -71,9 +43,13 @@ func main() {
 	// Create and register services
 	attestServer := tdx.NewServer(tdxClient)
 	auctionServer := auction.NewServer()
-
+	benchmarkServer, err := benchmark.NewServer()
+	if err != nil {
+		log.Fatalf("Failed to create benchmark server: %v", err)
+	}
 	attestpb.RegisterAttestServiceServer(grpcServer, attestServer)
 	auctionpb.RegisterAuctionServiceServer(grpcServer, auctionServer)
+	benchmarkpb.RegisterBenchmarkServiceServer(grpcServer, benchmarkServer)
 
 	// Enable reflection for debugging
 	reflection.Register(grpcServer)
