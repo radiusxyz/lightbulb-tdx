@@ -36,7 +36,7 @@ type AuctionMeta struct {
 // BenchmarkAuctionWorker shows how to assign subsets of auctions to different clients.
 func BenchmarkAuctionWorker(b *testing.B) {
     // 1) Load environment
-    if err := godotenv.Load(); err != nil {
+    if err := godotenv.Load("../.env"); err != nil {
         log.Fatalf("Error loading .env file: %v", err)
     }
     port := os.Getenv("PORT")
