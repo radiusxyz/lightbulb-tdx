@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"sync"
+	"time"
 
 	benchpb "github.com/radiusxyz/lightbulb-tdx/proto/benchmark"
 )
@@ -41,8 +42,10 @@ func (s *Server) Hello(ctx context.Context, req *benchpb.HelloRequest) (*benchpb
 // CPUIntensive tests CPU performance with heavy computation
 func (s *Server) CPUIntensive(ctx context.Context, req *benchpb.ComputeRequest) (*benchpb.ComputeResponse, error) {
 	result := 0.0
+	iterations := req.Iterations
+	
 	// Perform CPU-intensive calculations
-	for i := 0; i < 1000000; i++ {
+	for i := 0; i < int(iterations); i++ {
 		result += math.Sqrt(float64(i)) * math.Sin(float64(i))
 	}
 	return &benchpb.ComputeResponse{Result: result}, nil
@@ -50,33 +53,77 @@ func (s *Server) CPUIntensive(ctx context.Context, req *benchpb.ComputeRequest) 
 
 // MemoryIntensive tests memory allocation and access patterns
 func (s *Server) MemoryIntensive(ctx context.Context, req *benchpb.MemoryRequest) (*benchpb.MemoryResponse, error) {
-	// Allocate and manipulate large chunks of memory
-	size := 50 * 1024 * 1024 // 50MB
+	// Convert MB to bytes (using int64 to prevent overflow)
+	sizeMB := int64(req.SizeMb)
+	if sizeMB <= 0 {
+		sizeMB = 1024 // default 1GB
+	}
+	
+	size := sizeMB * 1024 * 1024
+	
+	// Calculate number of pages (using int64 for calculation)
+	numPages := size / 4096
+	if numPages <= 0 {
+		return nil, fmt.Errorf("invalid memory size: %d MB", sizeMB)
+	}
+	
+	// Allocate large memory chunk
 	data := make([]byte, size)
 	
-	// Perform memory operations
-	for i := 0; i < size; i += 4096 {
+	// First pass: Sequential write to allocate physical pages
+	for i := int64(0); i < size; i += 4096 {
 		data[i] = byte(i)
 	}
+	
+	// Create slice for page indices
+	pageIndices := make([]int64, numPages)
+	for i := range pageIndices {
+		pageIndices[i] = int64(i) * 4096
+	}
+	
+	// Fisher-Yates shuffle for random access pattern
+	for i := len(pageIndices) - 1; i > 0; i-- {
+		j := i * 7919 % len(pageIndices) // Deterministic but pseudo-random
+		pageIndices[i], pageIndices[j] = pageIndices[j], pageIndices[i]
+	}
+	
+	// Perform random access
+	start := time.Now()
+	sum := byte(0)
+	for _, idx := range pageIndices {
+		sum += data[idx]
+		data[idx] = sum
+	}
+	accessTime := time.Since(start)
 
-	// Calculate hash to prevent optimization
+	// Calculate and return statistics
 	hash := sha256.Sum256(data)
-	return &benchpb.MemoryResponse{Hash: hash[:]}, nil
+	return &benchpb.MemoryResponse{
+		Hash: hash[:],
+		AccessTimeNs: accessTime.Nanoseconds(),
+		PagesAccessed: int32(numPages), // Convert back to int32 for proto
+	}, nil
 }
 
 // DiskIO tests I/O performance
 func (s *Server) DiskIO(ctx context.Context, req *benchpb.IORequest) (*benchpb.IOResponse, error) {
-	// Create multiple files and perform concurrent I/O operations
-	const (
-		fileSize    = 10 * 1024 * 1024 // 10MB
-		numFiles    = 5
-		bufferSize  = 64 * 1024 // 64KB chunks
-	)
+	// Set parameters with defaults if needed
+	fileSizeMB := req.FileSizeMb
+	if fileSizeMB <= 0 {
+		fileSizeMB = 10 // default 10MB
+	}
+	
+	numFiles := req.NumFiles
+	if numFiles <= 0 {
+		numFiles = 5 // default 5 files
+	}
+	
+	fileSize := fileSizeMB * 1024 * 1024
 
 	var wg sync.WaitGroup
 	errChan := make(chan error, numFiles)
 
-	for i := 0; i < numFiles; i++ {
+	for i := 0; i < int(numFiles); i++ {
 		wg.Add(1)
 		go func(fileNum int) {
 			defer wg.Done()

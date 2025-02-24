@@ -20,6 +20,7 @@ message HelloResponse {
 }
 
 message ComputeRequest {
+    int32 iterations = 1;  // Number of iterations for computation
 }
 
 message ComputeResponse {
@@ -27,13 +28,18 @@ message ComputeResponse {
 }
 
 message MemoryRequest {
+    int32 size_mb = 1;     // Memory size in MB to allocate
 }
 
 message MemoryResponse {
     bytes hash = 1;
+    int64 access_time_ns = 2;    // Time taken for random access
+    int32 pages_accessed = 3;    // Number of pages accessed
 }
 
 message IORequest {
+    int32 file_size_mb = 1;    // Size of each file in MB
+    int32 num_files = 2;       // Number of files to create
 }
 
 message IOResponse {
