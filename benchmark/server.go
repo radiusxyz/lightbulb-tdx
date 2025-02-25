@@ -45,7 +45,7 @@ func (s *Server) CPUIntensive(ctx context.Context, req *benchpb.ComputeRequest) 
 	iterations := req.Iterations
 	
 	// Perform CPU-intensive calculations
-	for i := 0; i < int(iterations); i++ {
+	for i := range int(iterations) {
 		result += math.Sqrt(float64(i)) * math.Sin(float64(i))
 	}
 	return &benchpb.ComputeResponse{Result: result}, nil
@@ -123,7 +123,7 @@ func (s *Server) DiskIO(ctx context.Context, req *benchpb.IORequest) (*benchpb.I
 	var wg sync.WaitGroup
 	errChan := make(chan error, numFiles)
 
-	for i := 0; i < int(numFiles); i++ {
+	for i := range int(numFiles) {
 		wg.Add(1)
 		go func(fileNum int) {
 			defer wg.Done()
@@ -176,7 +176,7 @@ func (s *Server) Mixed(ctx context.Context, req *benchpb.MixedRequest) (*benchpb
 	
 	// CPU workload
 	result := 0.0
-	for i := 0; i < numCPUs; i++ {
+	for range numCPUs {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -188,7 +188,7 @@ func (s *Server) Mixed(ctx context.Context, req *benchpb.MixedRequest) (*benchpb
 
 	// Memory workload
 	data := make([][]byte, numCPUs)
-	for i := 0; i < numCPUs; i++ {
+	for i := range numCPUs {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
