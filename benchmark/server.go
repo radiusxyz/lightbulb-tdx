@@ -36,7 +36,7 @@ func (s *Server) Cleanup() error {
 
 // Hello tests basic network performance
 func (s *Server) Hello(ctx context.Context, req *benchpb.HelloRequest) (*benchpb.HelloResponse, error) {
-	return &benchpb.HelloResponse{Message: "Hello, World!"}, nil
+	return &benchpb.HelloResponse{Message: "Hello"}, nil
 }
 
 // CPUIntensive tests CPU performance with heavy computation
