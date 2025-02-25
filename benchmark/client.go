@@ -45,18 +45,25 @@ func (c *Client) Hello() (*benchpb.HelloResponse, error) {
 }
 
 // CPUIntensive sends a CPU-intensive computation request to the server.
-func (c *Client) CPUIntensive() (*benchpb.ComputeResponse, error) {
-	return c.client.CPUIntensive(context.Background(), &benchpb.ComputeRequest{})
+func (c *Client) CPUIntensive(iterations int32) (*benchpb.ComputeResponse, error) {
+	return c.client.CPUIntensive(context.Background(), &benchpb.ComputeRequest{
+		Iterations: iterations,
+	})
 }
 
 // MemoryIntensive sends a memory-intensive operation request to the server.
-func (c *Client) MemoryIntensive() (*benchpb.MemoryResponse, error) {
-	return c.client.MemoryIntensive(context.Background(), &benchpb.MemoryRequest{})
+func (c *Client) MemoryIntensive(sizeMB int32) (*benchpb.MemoryResponse, error) {
+	return c.client.MemoryIntensive(context.Background(), &benchpb.MemoryRequest{
+		SizeMb: sizeMB,
+	})
 }
 
 // DiskIO sends a disk I/O operation request to the server.
-func (c *Client) DiskIO() (*benchpb.IOResponse, error) {
-	return c.client.DiskIO(context.Background(), &benchpb.IORequest{})
+func (c *Client) DiskIO(fileSizeMB, numFiles int32) (*benchpb.IOResponse, error) {
+	return c.client.DiskIO(context.Background(), &benchpb.IORequest{
+		FileSizeMb: fileSizeMB,
+		NumFiles:   numFiles,
+	})
 }
 
 // Mixed sends a mixed workload request to the server.
