@@ -14,12 +14,10 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/radiusxyz/lightbulb-tdx/auction"
-	"github.com/radiusxyz/lightbulb-tdx/benchmark"
 	"github.com/radiusxyz/lightbulb-tdx/tdx"
 
 	attestpb "github.com/radiusxyz/lightbulb-tdx/proto/attest"
 	auctionpb "github.com/radiusxyz/lightbulb-tdx/proto/auction"
-	benchmarkpb "github.com/radiusxyz/lightbulb-tdx/proto/benchmark"
 )
 
 func main() {
@@ -43,13 +41,8 @@ func main() {
 	// Create and register services
 	attestServer := tdx.NewServer(tdxClient)
 	auctionServer := auction.NewServer()
-	benchmarkServer, err := benchmark.NewServer()
-	if err != nil {
-		log.Fatalf("Failed to create benchmark server: %v", err)
-	}
 	attestpb.RegisterAttestServiceServer(grpcServer, attestServer)
 	auctionpb.RegisterAuctionServiceServer(grpcServer, auctionServer)
-	benchmarkpb.RegisterBenchmarkServiceServer(grpcServer, benchmarkServer)
 
 	// Enable reflection for debugging
 	reflection.Register(grpcServer)
